@@ -103,9 +103,9 @@ export default function Home() {
   };
 
   /* ---------------- DELETE ---------------- */
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     await api.delete("/todos", { data: { id } });
-    setTodos((prev) => prev.filter((t) => t.id.toString() !== id));
+    setTodos((prev) => prev.filter((t) => t.id !== id));
   };
 
 
