@@ -15,6 +15,8 @@ import Link from "next/link";
 import api from "@/lib/axios";
 import { FiEdit3 } from "react-icons/fi";
 import { MdDeleteOutline } from "react-icons/md";
+import { json } from "stream/consumers";
+import Shimmer from "@/components/Shimmer";
 
 /* ---------------- TYPES ---------------- */
 type Status = "Pending" | "Completed";
@@ -35,14 +37,23 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useUser()
   console.log("user", user);
+  const [loading,setLoading] = useState<boolean>(true)
 
 
   useEffect(() => {
     if (!user?.id) return;
 
     const fetchTodos = async () => {
-      const res = await api.get(`/todos?userId=${user.id}`);
-      setTodos(res.data.todos);
+      try {
+        const res = await api.get(`/todos?userId=${user.id}`);
+        setTodos(res.data.todos);
+        
+      } catch (error) {
+        console.log(error);
+        
+      } finally{
+        setLoading(false)
+      }
     };
 
     fetchTodos();
@@ -91,24 +102,10 @@ export default function Home() {
     setEditingId(null);
   };
 
-  // const handleComplete = async () => {
-
-  //     const res = await api.put("/todos", {
-  //       status,
-  //     });
-
-  //     setTodos((prev) =>
-  //       prev.map((t) =>
-  //         t.id === editingId ? res.data.todo : t
-  //       )
-  //     );
-  //   }
-  // }
-
   /* ---------------- DELETE ---------------- */
   const handleDelete = async (id: string) => {
     await api.delete("/todos", { data: { id } });
-    setTodos((prev) => prev.filter((t) => t.id !== id));
+    setTodos((prev) => prev.filter((t) => t.id.toString() !== id));
   };
 
 
@@ -176,7 +173,7 @@ export default function Home() {
 
             {/* LIST */}
             <div className="space-y-4">
-              {todos.length === 0 && (
+              {loading ? <Shimmer /> : todos.length === 0 && (
                 <p className="text-center text-muted-foreground">
                   No tasks added yet
                 </p>

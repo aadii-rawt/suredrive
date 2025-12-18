@@ -63,6 +63,7 @@ export default function AddTodo({
             <Input
               placeholder="Title"
               value={title}
+              required
               onChange={(e) => setTitle(e.target.value)}
             />
 

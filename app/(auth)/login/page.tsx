@@ -28,11 +28,8 @@ export default function Login() {
     try {
       setLoading(true);
       const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("user", JSON.stringify(res.data.user))
-      // ✅ save user in context
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser(res.data.user);
-
-      // ✅ redirect to home
       router.push("/");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
@@ -42,7 +39,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-muted px-4">
+      {/* LOGIN CARD */}
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
@@ -81,6 +79,18 @@ export default function Login() {
           </p>
         </CardContent>
       </Card>
+
+      {/* FOOTER */}
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-sm text-muted-foreground">
+        Made with 🩶 by{" "}
+        <Link
+          href="https://aditya.dotdazzle.in"
+          className="underline hover:text-foreground"
+          target="_blank"
+        >
+          Aditya Rawat
+        </Link>
+      </footer>
     </div>
   );
 }

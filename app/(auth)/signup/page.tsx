@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import axios from "axios";
 import api from "@/lib/axios";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
@@ -21,16 +20,17 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<any>("")
-  const { setUser } = useUser()
-  const router = useRouter()
+  const [error, setError] = useState("");
+  const { setUser } = useUser();
+  const router = useRouter();
+
   const handleSignup = async () => {
     try {
       setLoading(true);
       const res = await api.post("/auth/signup", { name, email, password });
-      localStorage.setItem("user", JSON.stringify(res.data.user))
-      setUser(res.data.user)
-      router.push("/")
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      setUser(res.data.user);
+      router.push("/");
     } catch (err: any) {
       setError(err.response?.data?.message || "Signup failed");
     } finally {
@@ -39,7 +39,8 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-muted px-4">
+      {/* SIGNUP CARD */}
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
@@ -71,9 +72,8 @@ export default function Signup() {
             />
           </div>
 
-          <div>
-              <p className="text-sm text-red-500">{error}</p>
-          </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
           <Button onClick={handleSignup} className="w-full" disabled={loading}>
             {loading ? "Creating..." : "Sign Up"}
           </Button>
@@ -86,6 +86,18 @@ export default function Signup() {
           </p>
         </CardContent>
       </Card>
+
+      {/* FOOTER */}
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-sm text-muted-foreground">
+        Made with 🩶 by{" "}
+        <Link
+          href="https://aditya.dotdazzle.in"
+          className="underline hover:text-foreground"
+          target="_blank"
+        >
+          Aditya Rawat
+        </Link>
+      </footer>
     </div>
   );
 }
