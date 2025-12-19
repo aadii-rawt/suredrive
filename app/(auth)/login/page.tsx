@@ -16,8 +16,8 @@ import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@gmail.com");
+  const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,7 +40,7 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-muted px-4">
-      {/* LOGIN CARD */}
+    
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
@@ -52,6 +52,7 @@ export default function Login() {
             <Input
               type="email"
               value={email}
+              required
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
@@ -61,13 +62,14 @@ export default function Login() {
             <Input
               type="password"
               value={password}
+              required
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <Button onClick={handleLogin} className="w-full" disabled={loading}>
+          <Button onClick={handleLogin} className="w-full cursor-pointer" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
 
@@ -80,7 +82,7 @@ export default function Login() {
         </CardContent>
       </Card>
 
-      {/* FOOTER */}
+     
       <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-sm text-muted-foreground">
         Made with 🩶 by{" "}
         <Link

@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/context/UserContext";
@@ -15,10 +14,8 @@ import Link from "next/link";
 import api from "@/lib/axios";
 import { FiEdit3 } from "react-icons/fi";
 import { MdDeleteOutline } from "react-icons/md";
-import { json } from "stream/consumers";
 import Shimmer from "@/components/Shimmer";
 
-/* ---------------- TYPES ---------------- */
 type Status = "Pending" | "Completed";
 
 type Todo = {
@@ -35,10 +32,12 @@ export default function Home() {
   const [status, setStatus] = useState<Status>("Pending");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useUser()
-  console.log("user", user);
-  const [loading,setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState(true);
+  const [error,setError] = useState<string>("")
+  const [filterStatus, setFilterStatus] = useState<"All" | Status>("All");
+  const [search, setSearch] = useState("");
 
+  const { user } = useUser();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -47,25 +46,37 @@ export default function Home() {
       try {
         const res = await api.get(`/todos?userId=${user.id}`);
         setTodos(res.data.todos);
-        
       } catch (error) {
         console.log(error);
-        
-      } finally{
-        setLoading(false)
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTodos();
   }, [user]);
 
+  const filteredTodos = todos.filter((todo) => {
+    const statusMatch =
+      filterStatus === "All" || todo.status === filterStatus;
 
-  /* ---------------- CREATE / UPDATE ---------------- */
+    const searchMatch = todo.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    return statusMatch && searchMatch;
+  });
+
+
   const handleSave = async () => {
-    if (!title.trim() || !user?.id) return;
+    if (!user?.id) return;
+
+    if(title == ""){
+      setError("Please enter the todo title")
+      return
+    }
 
     try {
-      // 🔵 UPDATE
       if (editingId) {
         const res = await api.put("/todos", {
           id: editingId,
@@ -75,13 +86,9 @@ export default function Home() {
         });
 
         setTodos((prev) =>
-          prev.map((t) =>
-            t.id === editingId ? res.data.todo : t
-          )
+          prev.map((t) => (t.id === editingId ? res.data.todo : t))
         );
-      }
-      // 🟢 CREATE
-      else {
+      } else {
         const res = await api.post("/todos", {
           title,
           description,
@@ -91,25 +98,26 @@ export default function Home() {
 
         setTodos((prev) => [res.data.todo, ...prev]);
       }
+      
     } catch (err) {
       console.error("Failed to save todo");
     }
 
-    // reset
+    handleCloseModal()
+
     setTitle("");
     setDescription("");
     setStatus("Pending");
     setEditingId(null);
   };
 
-  /* ---------------- DELETE ---------------- */
+
   const handleDelete = async (id: number) => {
     await api.delete("/todos", { data: { id } });
     setTodos((prev) => prev.filter((t) => t.id !== id));
   };
 
 
-  /* ---------------- EDIT ---------------- */
   const handleEdit = (todo: Todo) => {
     setEditingId(todo.id);
     setTitle(todo.title);
@@ -118,26 +126,26 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  /* ---------------- TOGGLE STATUS (CHECKBOX) ---------------- */
   const handleToggleStatus = async (id: number) => {
+    const updatedTodo = todos.find((t) => t.id === id);
+    if (!updatedTodo) return;
+
+    const newStatus: Status =
+      updatedTodo.status === "Completed" ? "Pending" : "Completed";
 
     setTodos((prev) =>
       prev.map((todo) =>
-        todo.id === id
-          ? {
-            ...todo,
-            status: todo.status === "Completed" ? "Pending" : "Completed",
-          }
-          : todo
+        todo.id === id ? { ...todo, status: newStatus } : todo
       )
     );
-    const res = await api.put("/todos", {
-      id: id,
-      status,
+
+    await api.put("/todos", {
+      id,
+      status: newStatus,
     });
   };
 
-  /* ---------------- MODAL HELPERS ---------------- */
+  
   const handleOpenNew = () => {
     setEditingId(null);
     setTitle("");
@@ -157,123 +165,150 @@ export default function Home() {
   return (
     <AuthGuard>
       <Header />
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex-1">
-          <div className="max-w-5xl mx-auto w-full py-10 px-4 space-y-8">
-            {/* DASHBOARD HEADER */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Task Management</h1>
-                <p className="text-sm text-muted-foreground">
-                  Manage your tasks, mark them complete, and keep track of progress.
-                </p>
-              </div>
-              <Button onClick={handleOpenNew}>Add Todo</Button>
+
+      <div className="min-h-screen bg-background">
+        <div className="max-w-5xl mx-auto py-10 px-4 space-y-8">
+          {/* HEADER */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Task Management
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your tasks and track progress.
+              </p>
             </div>
 
-            {/* LIST */}
-            <div className="space-y-4">
-              {loading ? <Shimmer /> : todos.length === 0 && (
-                <p className="text-center text-muted-foreground">
-                  No tasks added yet
-                </p>
-              )}
+            <div className="flex gap-2 items-center">
+              <Input
+                placeholder="Search by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-48"
+              />
 
-              {todos.length > 0 && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 ">
-                  {todos.map((todo) => (
-                    <Card key={todo.id} className="h-full group">
-                      <CardContent className="py-2 space-y-3 h-full flex flex-col justify-between">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  className="h-4 w-4  cursor-pointer rounded border-muted-foreground/40 accent-primary"
-                                  checked={todo.status === "Completed"}
-                                  onChange={() => handleToggleStatus(todo.id)}
-                                />
-                                <h3
-                                  className={`font-semibold text-xl ${todo.status === "Completed"
-                                    ? "line-through text-muted-foreground"
-                                    : ""
-                                    }`}
-                                >
-                                  {todo.title}
-                                </h3>
-                              </div>
-                              {todo.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {todo.description}
-                                </p>
-                              )}
-                            </div>
+              <Select
+                value={filterStatus}
+                onValueChange={(v) =>
+                  setFilterStatus(v as "All" | Status)
+                }
+              
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent className="cursor-pointer">
+                  <SelectItem value="All">All</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
 
-                            <Badge
-                              className={
-                                todo.status === "Completed"
-                                  ? "bg-green-500"
-                                  : "bg-amber-400"
-                              }
-                            >
-                              {todo.status}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="justify-end gap-2 pt-1 flex opacity-0 group-hover:opacity-100 duration-500">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="cursor-pointer"
-                            onClick={() => handleEdit(todo)}
-                          >
-                            <FiEdit3 /> Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="cursor-pointer"
-                            onClick={() => handleDelete(todo.id)}
-                          >
-                            <MdDeleteOutline />  Delete
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <Button onClick={handleOpenNew} className="cursor-pointer">Add Todo</Button>
             </div>
-
-            <AddTodo
-              open={isModalOpen}
-              editingId={editingId}
-              title={title}
-              description={description}
-              status={status}
-              setTitle={setTitle}
-              setDescription={setDescription}
-              setStatus={setStatus}
-              onSave={() => {
-                handleSave();
-                handleCloseModal();
-              }}
-              onClose={handleCloseModal}
-            />
-
-
           </div>
+
+          {/* LIST */}
+          {loading ? (
+            <Shimmer />
+          ) : filteredTodos.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              No matching tasks found
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {filteredTodos.map((todo) => (
+                <Card key={todo.id} className="group">
+                  <CardContent className="py-3 space-y-3 flex flex-col justify-between h-full">
+                    <div className="flex justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={todo.status === "Completed"}
+                            onChange={() => handleToggleStatus(todo.id)}
+                            className="cursor-pointer"
+                          />
+                          <h3
+                            className={`text-xl font-semibold ${
+                              todo.status === "Completed"
+                                ? "line-through text-muted-foreground"
+                                : ""
+                            }`}
+                          >
+                            {todo.title}
+                          </h3>
+                        </div>
+                        {todo.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {todo.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <Badge
+                        className={
+                          todo.status === "Completed"
+                            ? "bg-green-500"
+                            : "bg-amber-400"
+                        }
+                      >
+                        {todo.status}
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(todo)}
+                        className="cursor-pointer"
+                      >
+                        <FiEdit3 /> Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(todo.id)}
+                        className="cursor-pointer"
+
+                      >
+                        <MdDeleteOutline /> Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <AddTodo
+            open={isModalOpen}
+            editingId={editingId}
+            title={title}
+            description={description}
+            status={status}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            setStatus={setStatus}
+            onSave={() => {
+              handleSave();
+            }}
+            onClose={handleCloseModal}
+            error={error}
+          />
         </div>
       </div>
+
       <footer className="py-4 text-center text-sm text-muted-foreground">
         Made with 🩶 by{" "}
-        <Link href="https://aditya.dotdazzle.in" className="underline hover:text-foreground">
+        <Link
+          href="https://aditya.dotdazzle.in"
+          className="underline hover:text-foreground"
+        >
           Aditya Rawat
         </Link>
       </footer>
-
     </AuthGuard>
   );
 }

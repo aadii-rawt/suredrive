@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1️⃣ Create auth user (ADMIN)
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ Insert user profile (ADMIN bypasses RLS)
+
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("users")
       .insert({
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3️⃣ Return user data
+   
     return NextResponse.json(
       {
         message: "Signup successful",

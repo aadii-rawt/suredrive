@@ -40,7 +40,7 @@ export default function Signup() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-muted px-4">
-      {/* SIGNUP CARD */}
+     
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
@@ -74,7 +74,7 @@ export default function Signup() {
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <Button onClick={handleSignup} className="w-full" disabled={loading}>
+          <Button onClick={handleSignup} className="w-full cursor-pointer" disabled={loading}>
             {loading ? "Creating..." : "Sign Up"}
           </Button>
 
@@ -87,7 +87,6 @@ export default function Signup() {
         </CardContent>
       </Card>
 
-      {/* FOOTER */}
       <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-sm text-muted-foreground">
         Made with 🩶 by{" "}
         <Link

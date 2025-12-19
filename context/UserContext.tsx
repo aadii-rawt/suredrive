@@ -25,7 +25,7 @@ type TodoContextType = {
   toggleTodoStatus: (id: number) => void;
   user: any;
   setUser: any;
-  initialized: boolean; // ✅ ADD THIS
+  initialized: boolean; 
 };
 
 const userContext = createContext<TodoContextType | undefined>(undefined);
@@ -41,7 +41,7 @@ export function useUser(): TodoContextType {
 export function UserProvider({ children }: { children: ReactNode }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [user, setUser] = useState<any>(null);
-  const [initialized, setInitialized] = useState(false); // ✅ ADD THIS
+  const [initialized, setInitialized] = useState(false);
 
   // 🔥 Restore user safely
   useEffect(() => {
@@ -49,7 +49,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    setInitialized(true); // ✅ VERY IMPORTANT
+    setInitialized(true); 
   }, []);
 
   const addTodo = (todo: Omit<Todo, "id">) => {

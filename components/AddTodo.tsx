@@ -30,6 +30,7 @@ type AddTodoProps = {
   setStatus: (v: Status) => void;
   onSave: () => void;
   onClose: () => void;
+  error : string
 };
 
 export default function AddTodo({
@@ -43,6 +44,7 @@ export default function AddTodo({
   setStatus,
   onSave,
   onClose,
+  error
 }: AddTodoProps) {
   if (!open) return null;
 
@@ -86,6 +88,10 @@ export default function AddTodo({
                 <SelectItem value="Completed">Completed</SelectItem>
               </SelectContent>
             </Select>
+
+            <div>
+              <p className="text-red-500">{error}</p>
+            </div>
 
             <div className="flex gap-2 pt-2">
             

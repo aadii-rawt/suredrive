@@ -11,7 +11,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1️⃣ Login user using Supabase Auth
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
@@ -24,7 +23,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ Fetch user profile from DB
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("users")
       .select("id, name, email, created_at")
@@ -38,7 +36,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3️⃣ Return user data
     return NextResponse.json(
       {
         message: "Login successful",

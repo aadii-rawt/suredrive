@@ -35,8 +35,7 @@ export default function Header() {
   return (
     <header className="w-full  bg-background">
       <div className="max-w-5xl mx-auto border-b flex items-center justify-between px-4 py-3">
-        {/* Logo / Title */}
-        <h1 className="text-lg font-semibold">Todo App</h1>
+        <h1 className="text-lg font-semibold"></h1>
 
         {/* User Dropdown */}
         <DropdownMenu>
